@@ -9,13 +9,10 @@ object Main {
   def main(args: Array[String]) {
     val tests = Parser.parseTests("C:/Projects/Training/scala-training/google-codejam/2015/Standing_Ovation/test/resources/" + args(0))
     
-    var i = 1
-    for ( test <- tests ) {
+    for ( (id, test) <- (1 to tests.size) zip tests ) {
       val sol = Solver.solve(test)
       
-      println("Case #" + i + ": " + sol)
-      
-      i = i + 1
+      println("Case #" + id + ": " + sol)
     }
   }
 }
