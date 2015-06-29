@@ -7,31 +7,18 @@ import collection.breakOut
  */
 object Solver {
   
-  def computeBestFrom(conf : Configuration) : Configuration = {
-    val reachableConfs : List[(Int, Configuration)] = 
-      (for { i <- 1 to (conf.height / 2)
-      } yield  conf.cutBy(i))(breakOut)
-      
-    def best(currBest : (Int, Configuration), confs: List[(Int, Configuration)]) : (Int, Configuration) = {
-      confs match {
-        case Nil => currBest
-        case (distance, conf) :: tail =>
-          val (bestDistance, bestConf) = currBest;
-          
-          val newBest = if ( (bestDistance + bestConf.height) <= (distance + conf.height) ) currBest else (distance, conf);
-          
-          best(newBest, tail)
-      }
-    }
-    
-    best((0, conf), reachableConfs)._2
+  def computeFrom(conf : Configuration) : List[Configuration] = {
+      (for { i <- 1 to (conf.height / 2);
+             (distance, newConf) = conf.cutBy(i)
+             if ( distance + newConf.height < conf.height )
+      } yield  (conf))(breakOut)
   }
   
   def solve(initConf : Configuration) : (Int, List[Configuration]) = {
     def solveFrom(path : List[Configuration]) : List[Configuration] = { 
       val lastConf = path.head
       
-      val nextConf = computeBestFrom(lastConf)
+      val nextConfs = computeFrom(lastConf)
       
       if ( lastConf == nextConf )
         path
