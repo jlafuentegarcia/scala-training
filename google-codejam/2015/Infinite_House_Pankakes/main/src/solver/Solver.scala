@@ -1,32 +1,57 @@
 package solver
 
+import collection.breakOut
+
 /**
  * @author jlafuente
  */
 object Solver {
-  def solve(dishes: List[Int]) : Int = {
-    val flattenDishes = flatten(dishes)
+  
+  def computeBestFrom(conf : Configuration) : Configuration = {
+    val reachableConfs : List[(Int, Configuration)] = 
+      (for { i <- 1 to (conf.height / 2)
+      } yield  conf.cutBy(i))(breakOut)
+      
+    def best(currBest : (Int, Configuration), confs: List[(Int, Configuration)]) : (Int, Configuration) = {
+      confs match {
+        case Nil => currBest
+        case (distance, conf) :: tail =>
+          val (bestDistance, bestConf) = currBest;
+          
+          val newBest = if ( (bestDistance + bestConf.height) <= (distance + conf.height) ) currBest else (distance, conf);
+          
+          best(newBest, tail)
+      }
+    }
     
-    val nFlatten = flattenDishes.size - dishes.size
-    
-    nFlatten + max(0, flattenDishes) 
+    best((0, conf), reachableConfs)._2
   }
   
-  def flatten(dishes: List[Int]) : List[Int] = {
-    if ( dishes == Nil )
-      Nil
-    else if ( dishes.head <= 3 )
-      dishes.head :: flatten(dishes.tail)
-    else
-      2 :: flatten ((dishes.head - 2) :: dishes.tail)
-  }
-  
-  def max(prevMax: Int, dishes: List[Int]) : Int = {
-    if ( dishes == Nil )
-      prevMax
-    else if ( dishes.head > prevMax )
-      max(dishes.head, dishes.tail)
-    else 
-      max(prevMax, dishes.tail)
+  def solve(initConf : Configuration) : (Int, List[Configuration]) = {
+    def solveFrom(path : List[Configuration]) : List[Configuration] = { 
+      val lastConf = path.head
+      
+      val nextConf = computeBestFrom(lastConf)
+      
+      if ( lastConf == nextConf )
+        path
+      else 
+        solveFrom(nextConf :: path)
+    }
+    
+    val path = solveFrom(initConf :: Nil)
+    
+    def computeTransitTime(path : List[Configuration], cumulTransit : Int) : Int = {
+      path match {
+        case x :: Nil => cumulTransit
+        case x :: y :: xs =>
+          val transit = x.width - y.width 
+          computeTransitTime(y :: xs, cumulTransit + transit)
+      }
+    }
+    
+    val cost = path.head.height + computeTransitTime(path, 0)
+    
+    (cost, path)
   }
 }
